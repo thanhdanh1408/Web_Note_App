@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
+import '../../viewmodels/auth_viewmodel_supabase.dart';
 import '../../theme/app_theme.dart';
 
 /// Register screen with modern UI
@@ -13,6 +13,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -21,6 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
+    _emailController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -30,25 +32,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.register(
-      _usernameController.text.trim(),
+    final authViewModel = context.read<AuthViewModelSupabase>();
+    final success = await authViewModel.register(
+      _emailController.text.trim(),
       _passwordController.text,
+      _usernameController.text.trim(),
     );
 
     if (mounted) {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Đăng ký thành công!'),
+            content: Text('Đăng ký thành công! Vui lòng đăng nhập.'),
             backgroundColor: AppTheme.accentGreen,
           ),
         );
+        // Go back to login screen
         Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(authProvider.error ?? 'Đăng ký thất bại'),
+            content: Text(authViewModel.error ?? 'Đăng ký thất bại'),
             backgroundColor: AppTheme.accentRed,
           ),
         );
@@ -58,7 +62,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
+    final authViewModel = context.watch<AuthViewModelSupabase>();
 
     return Scaffold(
       body: Container(
@@ -120,19 +124,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       const SizedBox(height: 32),
 
+                      // Email field
+                      TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          prefixIcon: Icon(Icons.email_outlined),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Vui lòng nhập email';
+                          }
+                          if (!value.contains('@') || !value.contains('.')) {
+                            return 'Email không hợp lệ';
+                          }
+                          return null;
+                        },
+                        textInputAction: TextInputAction.next,
+                      ),
+                      const SizedBox(height: 16),
+
                       // Username field
                       TextFormField(
                         controller: _usernameController,
                         decoration: const InputDecoration(
-                          labelText: 'Tên đăng nhập',
+                          labelText: 'Tên hiển thị',
                           prefixIcon: Icon(Icons.person_outline),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Vui lòng nhập tên đăng nhập';
+                            return 'Vui lòng nhập tên hiển thị';
                           }
                           if (value.trim().length < 3) {
-                            return 'Tên đăng nhập phải có ít nhất 3 ký tự';
+                            return 'Tên hiển thị phải có ít nhất 3 ký tự';
                           }
                           return null;
                         },
@@ -211,8 +236,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton(
-                          onPressed: authProvider.isLoading ? null : _register,
-                          child: authProvider.isLoading
+                          onPressed: authViewModel.isLoading ? null : _register,
+                          child: authViewModel.isLoading
                               ? const SizedBox(
                                   width: 24,
                                   height: 24,

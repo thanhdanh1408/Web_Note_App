@@ -129,7 +129,7 @@ class SearchFilterBar extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              colorTag.name,
+              colorTag.displayName,
               style: TextStyle(
                 color: isSelected ? Colors.white : color,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,

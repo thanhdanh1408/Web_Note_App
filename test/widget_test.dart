@@ -5,26 +5,59 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
+// Widget test for MVVM Architecture with Supabase
+// Tests that the app initializes correctly with Supabase ViewModels
+
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flutter_note_app/main.dart';
+import 'package:flutter_note_app/services/supabase_service.dart';
+import 'package:flutter_note_app/viewmodels/auth_viewmodel_supabase.dart';
+import 'package:flutter_note_app/viewmodels/notes_viewmodel_supabase.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('Supabase MVVM Architecture Tests', () {
+    late SupabaseService supabaseService;
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    setUp(() async {
+      // Initialize mock Supabase service
+      // Note: For actual testing, you would need to mock SupabaseClient
+      // This is a placeholder for basic initialization test
+      supabaseService = SupabaseService();
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    test('AuthViewModelSupabase initializes correctly', () {
+      final authViewModel = AuthViewModelSupabase(supabaseService);
+      
+      expect(authViewModel.isLoggedIn, false);
+      expect(authViewModel.currentUser, isNull);
+      expect(authViewModel.isLoading, false);
+      expect(authViewModel.error, isNull);
+    });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    test('NotesViewModelSupabase initializes correctly', () {
+      final notesViewModel = NotesViewModelSupabase(supabaseService);
+      
+      expect(notesViewModel.notes, isEmpty);
+      expect(notesViewModel.selectedNote, isNull);
+      expect(notesViewModel.isLoading, false);
+      expect(notesViewModel.searchQuery, '');
+      expect(notesViewModel.colorFilter, isNull);
+    });
+
+    // Note: Full integration tests would require Supabase test environment
+    test('ViewModels can be created', () {
+      final authViewModel = AuthViewModelSupabase(supabaseService);
+      final notesViewModel = NotesViewModelSupabase(supabaseService);
+      
+      expect(authViewModel, isNotNull);
+      expect(notesViewModel, isNotNull);
+    });
+
+    // TODO: Add integration tests with Supabase test environment
+    // This requires:
+    // 1. Mock SupabaseClient
+    // 2. Test database setup
+    // 3. Auth flow testing
+    // 4. CRUD operations testing
   });
 }

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:provider/provider.dart';
 import '../models/note.dart';
-import '../providers/auth_provider.dart';
-import '../providers/notes_provider.dart';
+import '../viewmodels/auth_viewmodel_supabase.dart';
+import '../viewmodels/notes_viewmodel_supabase.dart';
 import '../theme/app_theme.dart';
 import 'password_dialog.dart';
 
@@ -99,7 +99,7 @@ class _NoteDetailViewState extends State<NoteDetailView> {
   Future<void> _saveNote() async {
     if (!_hasChanges || !mounted) return;
 
-    final notesProvider = context.read<NotesProvider>();
+    final notesViewModel = context.read<NotesViewModelSupabase>();
     final contentJson = jsonEncode(_quillController.document.toDelta().toJson());
     final plainText = _quillController.document.toPlainText();
 
@@ -110,7 +110,7 @@ class _NoteDetailViewState extends State<NoteDetailView> {
       updatedAt: DateTime.now(),
     );
 
-    await notesProvider.updateNote(updatedNote);
+    await notesViewModel.updateNote(updatedNote);
     if (mounted) {
       setState(() {
         _hasChanges = false;
@@ -124,7 +124,7 @@ class _NoteDetailViewState extends State<NoteDetailView> {
 
   @override
   Widget build(BuildContext context) {
-    final notesProvider = context.watch<NotesProvider>();
+    final notesViewModel = context.watch<NotesViewModelSupabase>();
     final colorTag = widget.note.colorTag;
     
     // Background color based on note's color tag
@@ -149,7 +149,7 @@ class _NoteDetailViewState extends State<NoteDetailView> {
       child: Column(
         children: [
           // Toolbar
-          _buildToolbar(notesProvider),
+          _buildToolbar(notesViewModel),
           Divider(height: 1, color: Color(colorTag.colorValue).withValues(alpha: 0.2)),
           
           // Title input
@@ -265,7 +265,7 @@ class _NoteDetailViewState extends State<NoteDetailView> {
     );
   }
 
-  Widget _buildToolbar(NotesProvider notesProvider) {
+  Widget _buildToolbar(NotesViewModelSupabase notesViewModel) {
     final note = widget.note;
 
     return Container(
@@ -276,7 +276,7 @@ class _NoteDetailViewState extends State<NoteDetailView> {
           _ColorTagButton(
             currentColor: note.colorTag,
             onColorSelected: (color) {
-              notesProvider.updateColorTag(note, color);
+              notesViewModel.updateColorTag(note, color);
             },
           ),
           const SizedBox(width: 8),
@@ -288,7 +288,7 @@ class _NoteDetailViewState extends State<NoteDetailView> {
               color: note.isPinned ? AppTheme.accentYellow : AppTheme.textSecondary,
             ),
             tooltip: note.isPinned ? 'Bỏ ghim' : 'Ghim ghi chú',
-            onPressed: () => notesProvider.togglePin(note),
+            onPressed: () => notesViewModel.togglePin(note),
           ),
           
           // Private button
@@ -298,7 +298,7 @@ class _NoteDetailViewState extends State<NoteDetailView> {
               color: note.isPrivate ? AppTheme.accentGreen : AppTheme.textSecondary,
             ),
             tooltip: note.isPrivate ? 'Bỏ riêng tư' : 'Chuyển sang SAFE',
-            onPressed: () => _togglePrivate(notesProvider),
+            onPressed: () => _togglePrivate(notesViewModel),
           ),
           
           const Spacer(),
@@ -353,7 +353,7 @@ class _NoteDetailViewState extends State<NoteDetailView> {
             icon: const Icon(Icons.delete_outline),
             color: AppTheme.accentRed,
             tooltip: 'Xóa ghi chú',
-            onPressed: () => _confirmDelete(notesProvider),
+            onPressed: () => _confirmDelete(notesViewModel),
           ),
         ],
       ),
@@ -389,14 +389,13 @@ class _NoteDetailViewState extends State<NoteDetailView> {
     );
   }
 
-  Future<void> _togglePrivate(NotesProvider notesProvider) async {
+  Future<void> _togglePrivate(NotesViewModelSupabase notesViewModel) async {
     final note = widget.note;
-    final authProvider = context.read<AuthProvider>();
-    final userId = authProvider.currentUser?.id ?? '';
+    final authViewModel = context.read<AuthViewModelSupabase>();
     
     if (note.isPrivate) {
       // Remove from SAFE - just toggle off
-      await notesProvider.togglePrivate(note);
+      await notesViewModel.togglePrivate(note);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -407,7 +406,8 @@ class _NoteDetailViewState extends State<NoteDetailView> {
       }
     } else {
       // Check if SAFE password is configured
-      if (!notesProvider.hasSafePassword(userId)) {
+      final hasSafe = await authViewModel.hasSafePassword();
+      if (!hasSafe) {
         // Need to configure SAFE password first
         final password = await PasswordDialog.show(
           context,
@@ -417,9 +417,9 @@ class _NoteDetailViewState extends State<NoteDetailView> {
         );
         
         if (password != null) {
-          await notesProvider.setSafePassword(userId, password);
+          await authViewModel.setSafePassword(password);
           // Now add to SAFE
-          await notesProvider.togglePrivate(note);
+          await notesViewModel.togglePrivate(note);
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -431,7 +431,7 @@ class _NoteDetailViewState extends State<NoteDetailView> {
         }
       } else {
         // SAFE password already configured, just add to SAFE
-        await notesProvider.togglePrivate(note);
+        await notesViewModel.togglePrivate(note);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -444,10 +444,9 @@ class _NoteDetailViewState extends State<NoteDetailView> {
     }
   }
 
-  Future<void> _confirmDelete(NotesProvider notesProvider) async {
+  Future<void> _confirmDelete(NotesViewModelSupabase notesViewModel) async {
     final note = widget.note;
-    final authProvider = context.read<AuthProvider>();
-    final userId = authProvider.currentUser?.id ?? '';
+    final authViewModel = context.read<AuthViewModelSupabase>();
     
     // If private note, require SAFE password first
     if (note.isPrivate) {
@@ -459,7 +458,8 @@ class _NoteDetailViewState extends State<NoteDetailView> {
       
       if (password == null) return;
       
-      if (!notesProvider.verifySafePassword(userId, password)) {
+      final verified = await authViewModel.verifySafePassword(password);
+      if (!verified) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -499,7 +499,7 @@ class _NoteDetailViewState extends State<NoteDetailView> {
 
     if (confirmed == true) {
       _hasChanges = false; // Prevent save on dispose
-      await notesProvider.deleteNote(widget.note.id);
+      await notesViewModel.deleteNote(widget.note.id);
     }
   }
 }
@@ -547,7 +547,7 @@ class _ColorTagButton extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                colorTag.name,
+                colorTag.displayName,
                 style: TextStyle(
                   color: isSelected ? AppTheme.primaryColor : AppTheme.textPrimary,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,

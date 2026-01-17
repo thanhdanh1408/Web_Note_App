@@ -49,6 +49,9 @@ dependencies:
   # Local Storage
   shared_preferences: ^2.3.3
   
+  # Supabase Backend
+  supabase_flutter: ^2.0.0
+  
   # Utilities
   uuid: ^4.5.1
 

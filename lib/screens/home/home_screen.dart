@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/notes_provider.dart';
+import '../../viewmodels/auth_viewmodel_supabase.dart';
+import '../../viewmodels/notes_viewmodel_supabase.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/note_card.dart';
 import '../../widgets/note_detail_view.dart';
@@ -28,18 +28,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadNotes() async {
     if (!mounted) return;
-    final authProvider = context.read<AuthProvider>();
-    final notesProvider = context.read<NotesProvider>();
     
-    if (authProvider.currentUser != null) {
-      await notesProvider.loadNotes(authProvider.currentUser!.id);
-    }
+    final authViewModel = context.read<AuthViewModelSupabase>();
+    print('HomeScreen - User logged in: ${authViewModel.isLoggedIn}');
+    print('HomeScreen - User ID: ${authViewModel.userId}');
+    
+    final notesViewModel = context.read<NotesViewModelSupabase>();
+    await notesViewModel.loadNotes();
   }
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-    final notesProvider = context.watch<NotesProvider>();
+    final authViewModel = context.watch<AuthViewModelSupabase>();
+    final notesViewModel = context.watch<NotesViewModelSupabase>();
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 768;
 
@@ -52,13 +53,13 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             children: [
               // Header
-              _buildHeader(authProvider),
+              _buildHeader(authViewModel),
               
               // Main content
               Expanded(
                 child: isMobile
-                    ? _buildMobileLayout(notesProvider, authProvider)
-                    : _buildDesktopLayout(notesProvider, authProvider),
+                    ? _buildMobileLayout(notesViewModel, authViewModel)
+                    : _buildDesktopLayout(notesViewModel, authViewModel),
               ),
             ],
           ),
@@ -67,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHeader(AuthProvider authProvider) {
+  Widget _buildHeader(AuthViewModelSupabase authViewModel) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
@@ -121,8 +122,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   radius: 14,
                   backgroundColor: AppTheme.primaryColor,
                   child: Text(
-                    authProvider.username.isNotEmpty 
-                        ? authProvider.username[0].toUpperCase() 
+                    authViewModel.username.isNotEmpty 
+                        ? authViewModel.username[0].toUpperCase() 
                         : '?',
                     style: const TextStyle(
                       color: Colors.white,
@@ -133,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  'Xin chào, ${authProvider.username}',
+                  'Xin chào, ${authViewModel.username}',
                   style: TextStyle(
                     color: AppTheme.textPrimary,
                     fontWeight: FontWeight.w500,
@@ -173,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: IconButton(
               icon: const Icon(Icons.logout_rounded),
               color: AppTheme.accentRed,
-              onPressed: () => _confirmLogout(authProvider),
+              onPressed: () => _confirmLogout(authViewModel),
             ),
           ),
         ],
@@ -181,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildDesktopLayout(NotesProvider notesProvider, AuthProvider authProvider) {
+  Widget _buildDesktopLayout(NotesViewModelSupabase notesViewModel, AuthViewModelSupabase authViewModel) {
     return Row(
       children: [
         // Sidebar - Notes list
@@ -189,17 +190,17 @@ class _HomeScreenState extends State<HomeScreen> {
           width: 360,
           margin: const EdgeInsets.all(16),
           decoration: AppTheme.glassDecoration,
-          child: _buildSidebar(notesProvider, authProvider),
+          child: _buildSidebar(notesViewModel, authViewModel),
         ),
         
         // Main content - Note detail
         Expanded(
           child: Container(
             margin: const EdgeInsets.fromLTRB(0, 16, 16, 16),
-            child: notesProvider.selectedNote != null
+            child: notesViewModel.selectedNote != null
                 ? NoteDetailView(
-                    key: ValueKey(notesProvider.selectedNote!.id),
-                    note: notesProvider.selectedNote!,
+                    key: ValueKey(notesViewModel.selectedNote!.id),
+                    note: notesViewModel.selectedNote!,
                   )
                 : _buildEmptyState(),
           ),
@@ -208,9 +209,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildMobileLayout(NotesProvider notesProvider, AuthProvider authProvider) {
+  Widget _buildMobileLayout(NotesViewModelSupabase notesViewModel, AuthViewModelSupabase authViewModel) {
     // On mobile, show either the list or the detail
-    if (notesProvider.selectedNote != null) {
+    if (notesViewModel.selectedNote != null) {
       return Column(
         children: [
           // Back button
@@ -220,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.arrow_back),
-                  onPressed: () => notesProvider.selectNote(null),
+                  onPressed: () => notesViewModel.selectNote(null),
                 ),
                 const Text('Quay lại danh sách'),
               ],
@@ -230,8 +231,8 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Container(
               margin: const EdgeInsets.all(16),
               child: NoteDetailView(
-                key: ValueKey(notesProvider.selectedNote!.id),
-                note: notesProvider.selectedNote!,
+                key: ValueKey(notesViewModel.selectedNote!.id),
+                note: notesViewModel.selectedNote!,
               ),
             ),
           ),
@@ -242,21 +243,21 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: AppTheme.glassDecoration,
-      child: _buildSidebar(notesProvider, authProvider),
+      child: _buildSidebar(notesViewModel, authViewModel),
     );
   }
 
-  Widget _buildSidebar(NotesProvider notesProvider, AuthProvider authProvider) {
+  Widget _buildSidebar(NotesViewModelSupabase notesViewModel, AuthViewModelSupabase authViewModel) {
     return Column(
       children: [
         // Search and filter
         Padding(
           padding: const EdgeInsets.all(16),
           child: SearchFilterBar(
-            searchQuery: notesProvider.searchQuery,
-            selectedColor: notesProvider.colorFilter,
-            onSearchChanged: notesProvider.setSearchQuery,
-            onColorSelected: notesProvider.setColorFilter,
+            searchQuery: notesViewModel.searchQuery,
+            selectedColor: notesViewModel.colorFilter,
+            onSearchChanged: notesViewModel.setSearchQuery,
+            onColorSelected: notesViewModel.setColorFilter,
           ),
         ),
         
@@ -267,8 +268,16 @@ class _HomeScreenState extends State<HomeScreen> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () async {
-                if (authProvider.currentUser != null) {
-                  await notesProvider.createNote(authProvider.currentUser!.id);
+                final note = await notesViewModel.createNote();
+                if (note == null && notesViewModel.error != null) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(notesViewModel.error!),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
                 }
               },
               icon: const Icon(Icons.add_rounded),
@@ -285,19 +294,19 @@ class _HomeScreenState extends State<HomeScreen> {
         
         // Notes list
         Expanded(
-          child: notesProvider.isLoading
+          child: notesViewModel.isLoading
               ? const Center(child: CircularProgressIndicator())
-              : notesProvider.notes.isEmpty
+              : notesViewModel.notes.isEmpty
                   ? _buildEmptyListState()
                   : ListView.builder(
                       padding: const EdgeInsets.all(16),
-                      itemCount: notesProvider.notes.length,
+                      itemCount: notesViewModel.notes.length,
                       itemBuilder: (context, index) {
-                        final note = notesProvider.notes[index];
+                        final note = notesViewModel.notes[index];
                         return NoteCard(
                           note: note,
-                          isSelected: notesProvider.selectedNote?.id == note.id,
-                          onTap: () => notesProvider.selectNote(note),
+                          isSelected: notesViewModel.selectedNote?.id == note.id,
+                          onTap: () => notesViewModel.selectNote(note),
                         );
                       },
                     ),
@@ -339,9 +348,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildEmptyListState() {
-    final notesProvider = context.read<NotesProvider>();
-    final hasFilters = notesProvider.searchQuery.isNotEmpty || 
-                       notesProvider.colorFilter != null;
+    final notesViewModel = context.read<NotesViewModelSupabase>();
+    final hasFilters = notesViewModel.searchQuery.isNotEmpty || 
+                       notesViewModel.colorFilter != null;
     
     return Center(
       child: Column(
@@ -373,7 +382,7 @@ class _HomeScreenState extends State<HomeScreen> {
           if (hasFilters) ...[
             const SizedBox(height: 16),
             TextButton.icon(
-              onPressed: () => notesProvider.clearFilters(),
+              onPressed: () => notesViewModel.clearFilters(),
               icon: const Icon(Icons.clear_all),
               label: const Text('Xóa bộ lọc'),
             ),
@@ -383,7 +392,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _confirmLogout(AuthProvider authProvider) async {
+  Future<void> _confirmLogout(AuthViewModelSupabase authViewModel) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -410,7 +419,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (confirmed == true) {
-      await authProvider.logout();
+      await authViewModel.logout();
     }
   }
 }

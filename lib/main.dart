@@ -3,43 +3,44 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:provider/provider.dart';
 
-import 'providers/auth_provider.dart';
-import 'providers/notes_provider.dart';
+import 'config/supabase_config.dart';
+import 'viewmodels/auth_viewmodel_supabase.dart';
+import 'viewmodels/notes_viewmodel_supabase.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
-import 'services/local_storage_service.dart';
+import 'services/supabase_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize local storage
-  final storageService = LocalStorageService();
-  await storageService.init();
+  // Initialize Supabase
+  await SupabaseConfig.initialize();
   
-  runApp(MyApp(storageService: storageService));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final LocalStorageService storageService;
-  
-  const MyApp({super.key, required this.storageService});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Create Supabase service instance
+    final supabaseService = SupabaseService();
+    
     return MultiProvider(
       providers: [
-        // Local storage service
-        Provider<LocalStorageService>.value(value: storageService),
+        // Supabase service
+        Provider<SupabaseService>.value(value: supabaseService),
         
-        // Auth provider
+        // Auth ViewModel
         ChangeNotifierProvider(
-          create: (_) => AuthProvider(storageService),
+          create: (_) => AuthViewModelSupabase(supabaseService),
         ),
         
-        // Notes provider
+        // Notes ViewModel
         ChangeNotifierProvider(
-          create: (_) => NotesProvider(storageService),
+          create: (_) => NotesViewModelSupabase(supabaseService),
         ),
       ],
       child: MaterialApp(
@@ -70,10 +71,10 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
+    final authViewModel = context.watch<AuthViewModelSupabase>();
     
     // Show appropriate screen based on auth state
-    if (authProvider.isLoggedIn) {
+    if (authViewModel.isLoggedIn) {
       return const HomeScreen();
     } else {
       return const LoginScreen();

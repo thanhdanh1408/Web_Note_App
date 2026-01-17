@@ -12,7 +12,8 @@ enum NoteColorTag {
 
 /// Extension to get color values for each tag
 extension NoteColorTagExtension on NoteColorTag {
-  String get name {
+  /// Get display name in Vietnamese
+  String get displayName {
     switch (this) {
       case NoteColorTag.none:
         return 'Tất cả';
@@ -31,6 +32,11 @@ extension NoteColorTagExtension on NoteColorTag {
       case NoteColorTag.pink:
         return 'Hồng';
     }
+  }
+  
+  /// Get database value (lowercase enum name)
+  String get dbValue {
+    return toString().split('.').last;
   }
 
   int get colorValue {

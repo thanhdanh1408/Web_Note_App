@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/notes_provider.dart';
+import '../../viewmodels/auth_viewmodel_supabase.dart';
+import '../../viewmodels/notes_viewmodel_supabase.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/note_card.dart';
 import '../../widgets/note_detail_view.dart';
@@ -18,21 +18,20 @@ class PrivateNotesScreen extends StatefulWidget {
 class _PrivateNotesScreenState extends State<PrivateNotesScreen> {
   bool _isUnlocked = false;
 
-  String get _userId {
-    return context.read<AuthProvider>().currentUser?.id ?? '';
-  }
-
   Future<void> _unlock() async {
-    final notesProvider = context.read<NotesProvider>();
+    final authViewModel = context.read<AuthViewModelSupabase>();
     
     // Check if SAFE password is configured
-    if (!notesProvider.hasSafePassword(_userId)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chưa có mật khẩu SAFE. Hãy khóa một ghi chú để cấu hình.'),
-          backgroundColor: AppTheme.accentYellow,
-        ),
-      );
+    final hasSafe = await authViewModel.hasSafePassword();
+    if (!hasSafe) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Chưa có mật khẩu SAFE. Hãy khóa một ghi chú để cấu hình.'),
+            backgroundColor: AppTheme.accentYellow,
+          ),
+        );
+      }
       return;
     }
 
@@ -43,7 +42,8 @@ class _PrivateNotesScreenState extends State<PrivateNotesScreen> {
     );
 
     if (password != null && mounted) {
-      if (notesProvider.verifySafePassword(_userId, password)) {
+      final verified = await authViewModel.verifySafePassword(password);
+      if (verified) {
         setState(() {
           _isUnlocked = true;
         });
@@ -59,7 +59,7 @@ class _PrivateNotesScreenState extends State<PrivateNotesScreen> {
   }
 
   Future<void> _changePassword() async {
-    final notesProvider = context.read<NotesProvider>();
+    final authViewModel = context.read<AuthViewModelSupabase>();
     
     // First, verify old password
     final oldPassword = await PasswordDialog.show(
@@ -70,7 +70,8 @@ class _PrivateNotesScreenState extends State<PrivateNotesScreen> {
 
     if (oldPassword == null) return;
 
-    if (!notesProvider.verifySafePassword(_userId, oldPassword)) {
+    final verified = await authViewModel.verifySafePassword(oldPassword);
+    if (!verified) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -91,7 +92,7 @@ class _PrivateNotesScreenState extends State<PrivateNotesScreen> {
     );
 
     if (newPassword != null && mounted) {
-      await notesProvider.setSafePassword(_userId, newPassword);
+      await authViewModel.setSafePassword(newPassword);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Đã đổi mật khẩu SAFE thành công'),
@@ -128,10 +129,14 @@ class _PrivateNotesScreenState extends State<PrivateNotesScreen> {
   }
 
   Widget _buildHeader() {
-    final notesProvider = context.watch<NotesProvider>();
-    final hasSafePassword = notesProvider.hasSafePassword(_userId);
+    final authViewModel = context.watch<AuthViewModelSupabase>();
     
-    return Container(
+    return FutureBuilder<bool>(
+      future: authViewModel.hasSafePassword(),
+      builder: (context, snapshot) {
+        final hasSafePassword = snapshot.data ?? false;
+        
+        return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -187,31 +192,22 @@ class _PrivateNotesScreenState extends State<PrivateNotesScreen> {
                 foregroundColor: AppTheme.primaryColor,
               ),
             ),
-          
-          // Lock/Unlock button
-          if (_isUnlocked)
-            TextButton.icon(
-              onPressed: () {
-                setState(() {
-                  _isUnlocked = false;
-                });
-                context.read<NotesProvider>().selectNote(null);
-              },
-              icon: const Icon(Icons.lock_rounded, size: 18),
-              label: const Text('Khóa'),
-              style: TextButton.styleFrom(
-                foregroundColor: AppTheme.accentRed,
-              ),
-            ),
         ],
       ),
+    );
+      },
     );
   }
 
   Widget _buildLockedContent() {
-    final notesProvider = context.watch<NotesProvider>();
-    final hasSafePassword = notesProvider.hasSafePassword(_userId);
-    final privateNotesCount = notesProvider.privateNotes.length;
+    final authViewModel = context.watch<AuthViewModelSupabase>();
+    final notesViewModel = context.watch<NotesViewModelSupabase>();
+    final privateNotesCount = notesViewModel.privateNotes.length;
+    
+    return FutureBuilder<bool>(
+      future: authViewModel.hasSafePassword(),
+      builder: (context, snapshot) {
+        final hasSafePassword = snapshot.data ?? false;
     
     return Center(
       child: Container(
@@ -305,11 +301,13 @@ class _PrivateNotesScreenState extends State<PrivateNotesScreen> {
         ),
       ),
     );
+      },
+    );
   }
 
   Widget _buildUnlockedContent() {
-    final notesProvider = context.watch<NotesProvider>();
-    final privateNotes = notesProvider.privateNotes;
+    final notesViewModel = context.watch<NotesViewModelSupabase>();
+    final privateNotes = notesViewModel.privateNotes;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 768;
 
@@ -319,7 +317,7 @@ class _PrivateNotesScreenState extends State<PrivateNotesScreen> {
 
     if (isMobile) {
       // Mobile layout
-      if (notesProvider.selectedNote != null) {
+      if (notesViewModel.selectedNote != null) {
         return Column(
           children: [
             Padding(
@@ -328,7 +326,7 @@ class _PrivateNotesScreenState extends State<PrivateNotesScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back),
-                    onPressed: () => notesProvider.selectNote(null),
+                    onPressed: () => notesViewModel.selectNote(null),
                   ),
                   const Text('Quay lại danh sách'),
                 ],
@@ -338,8 +336,8 @@ class _PrivateNotesScreenState extends State<PrivateNotesScreen> {
               child: Container(
                 margin: const EdgeInsets.all(16),
                 child: NoteDetailView(
-                  key: ValueKey(notesProvider.selectedNote!.id),
-                  note: notesProvider.selectedNote!,
+                  key: ValueKey(notesViewModel.selectedNote!.id),
+                  note: notesViewModel.selectedNote!,
                 ),
               ),
             ),
@@ -350,7 +348,7 @@ class _PrivateNotesScreenState extends State<PrivateNotesScreen> {
       return Container(
         margin: const EdgeInsets.all(16),
         decoration: AppTheme.glassDecoration,
-        child: _buildNotesList(privateNotes, notesProvider),
+        child: _buildNotesList(privateNotes, notesViewModel),
       );
     }
 
@@ -362,17 +360,17 @@ class _PrivateNotesScreenState extends State<PrivateNotesScreen> {
           width: 340,
           margin: const EdgeInsets.all(16),
           decoration: AppTheme.glassDecoration,
-          child: _buildNotesList(privateNotes, notesProvider),
+          child: _buildNotesList(privateNotes, notesViewModel),
         ),
         
         // Note detail
         Expanded(
           child: Container(
             margin: const EdgeInsets.fromLTRB(0, 16, 16, 16),
-            child: notesProvider.selectedNote != null
+            child: notesViewModel.selectedNote != null
                 ? NoteDetailView(
-                    key: ValueKey(notesProvider.selectedNote!.id),
-                    note: notesProvider.selectedNote!,
+                    key: ValueKey(notesViewModel.selectedNote!.id),
+                    note: notesViewModel.selectedNote!,
                   )
                 : _buildSelectNoteState(),
           ),
@@ -381,7 +379,7 @@ class _PrivateNotesScreenState extends State<PrivateNotesScreen> {
     );
   }
 
-  Widget _buildNotesList(List privateNotes, NotesProvider notesProvider) {
+  Widget _buildNotesList(List privateNotes, NotesViewModelSupabase notesViewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -420,8 +418,8 @@ class _PrivateNotesScreenState extends State<PrivateNotesScreen> {
               final note = privateNotes[index];
               return NoteCard(
                 note: note,
-                isSelected: notesProvider.selectedNote?.id == note.id,
-                onTap: () => notesProvider.selectNote(note),
+                isSelected: notesViewModel.selectedNote?.id == note.id,
+                onTap: () => notesViewModel.selectNote(note),
               );
             },
           ),

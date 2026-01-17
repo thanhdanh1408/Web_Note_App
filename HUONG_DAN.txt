@@ -1,0 +1,5 @@
+flutter pub get
+
+flutter run
+
+chọn chạy trên edge

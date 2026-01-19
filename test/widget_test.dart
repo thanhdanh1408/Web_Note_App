@@ -8,7 +8,7 @@ void main() {
   group('Supabase MVVM Architecture Tests', () {
     late SupabaseService supabaseService;
 
-    setUp(() async {
+    setUp(() async {  
       supabaseService = SupabaseService();
     });
 

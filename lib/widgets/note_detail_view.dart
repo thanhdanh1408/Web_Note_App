@@ -226,33 +226,33 @@ class _NoteDetailViewState extends State<NoteDetailView> {
               child: QuillSimpleToolbar(
                 controller: _quillController,
                 config: const QuillSimpleToolbarConfig(
-                  showBoldButton: true,
-                  showItalicButton: true,
-                  showUnderLineButton: true,
-                  showStrikeThrough: true,
-                  showListBullets: true,
-                  showListNumbers: true,
-                  showListCheck: true,
-                  showCodeBlock: false,
-                  showQuote: true,
-                  showLink: false,
-                  showUndo: true,
-                  showRedo: true,
-                  showFontFamily: false,
-                  showFontSize: false,
-                  showBackgroundColorButton: false,
-                  showColorButton: false,
-                  showClearFormat: true,
-                  showAlignmentButtons: false,
-                  showHeaderStyle: true,
-                  showIndent: false,
-                  showDividers: true,
-                  showSearchButton: false,
-                  showSubscript: false,
-                  showSuperscript: false,
-                  showSmallButton: false,
-                  showInlineCode: false,
-                  showDirection: false,
+                    showBoldButton: true,
+                    showItalicButton: true,
+                    showUnderLineButton: true,
+                    showStrikeThrough: true,
+                    showListBullets: true,
+                    showListNumbers: true,
+                    showListCheck: true,
+                    showCodeBlock: false,
+                    showQuote: true,
+                    showLink: false,
+                    showUndo: true,
+                    showRedo: true,
+                    showFontFamily: false,
+                    showFontSize: false,
+                    showBackgroundColorButton: false,
+                    showColorButton: false,
+                    showClearFormat: true,
+                    showAlignmentButtons: false,
+                    showHeaderStyle: true,
+                    showIndent: false,
+                    showDividers: true,
+                    showSearchButton: false,
+                    showSubscript: false,
+                    showSuperscript: false,
+                    showSmallButton: false,
+                    showInlineCode: false,
+                    showDirection: false,
                 ),
               ),
             ),
@@ -272,90 +272,90 @@ class _NoteDetailViewState extends State<NoteDetailView> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          // Color tag selector
-          _ColorTagButton(
-            currentColor: note.colorTag,
-            onColorSelected: (color) {
-              notesViewModel.updateColorTag(note, color);
-            },
+        // Color tag selector
+        _ColorTagButton(
+          currentColor: note.colorTag,
+          onColorSelected: (color) {
+            notesViewModel.updateColorTag(note, color);
+          },
+        ),
+        const SizedBox(width: 8),
+        
+        // Pin button
+        IconButton(
+          icon: Icon(
+            note.isPinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
+            color: note.isPinned ? AppTheme.accentYellow : AppTheme.textSecondary,
           ),
-          const SizedBox(width: 8),
-          
-          // Pin button
-          IconButton(
-            icon: Icon(
-              note.isPinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
-              color: note.isPinned ? AppTheme.accentYellow : AppTheme.textSecondary,
+          tooltip: note.isPinned ? 'Bỏ ghim' : 'Ghim ghi chú',
+          onPressed: () => notesViewModel.togglePin(note),
+        ),
+        
+        // Private button
+        IconButton(
+          icon: Icon(
+            note.isPrivate ? Icons.lock_rounded : Icons.lock_outline,
+            color: note.isPrivate ? AppTheme.accentGreen : AppTheme.textSecondary,
+          ),
+          tooltip: note.isPrivate ? 'Bỏ riêng tư' : 'Chuyển sang SAFE',
+          onPressed: () => _togglePrivate(notesViewModel),
+        ),
+        
+        const Spacer(),
+        
+        // Save indicator
+        if (_hasChanges)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppTheme.accentYellow.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
             ),
-            tooltip: note.isPinned ? 'Bỏ ghim' : 'Ghim ghi chú',
-            onPressed: () => notesViewModel.togglePin(note),
-          ),
-          
-          // Private button
-          IconButton(
-            icon: Icon(
-              note.isPrivate ? Icons.lock_rounded : Icons.lock_outline,
-              color: note.isPrivate ? AppTheme.accentGreen : AppTheme.textSecondary,
-            ),
-            tooltip: note.isPrivate ? 'Bỏ riêng tư' : 'Chuyển sang SAFE',
-            onPressed: () => _togglePrivate(notesViewModel),
-          ),
-          
-          const Spacer(),
-          
-          // Save indicator
-          if (_hasChanges)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppTheme.accentYellow.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.edit_rounded,
-                    size: 14,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.edit_rounded,
+                  size: 14,
+                  color: AppTheme.accentYellow,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Đang chỉnh sửa',
+                  style: TextStyle(
                     color: AppTheme.accentYellow,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Đang chỉnh sửa',
-                    style: TextStyle(
-                      color: AppTheme.accentYellow,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          
-          const SizedBox(width: 8),
-          
-          // Save button
-          ElevatedButton.icon(
-            onPressed: _hasChanges ? _saveNote : null,
-            icon: const Icon(Icons.save_outlined, size: 18),
-            label: const Text('Lưu'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _hasChanges ? AppTheme.primaryColor : Colors.grey.shade300,
-              foregroundColor: _hasChanges ? Colors.white : AppTheme.textSecondary,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                ),
+              ],
             ),
           ),
-          
-          const SizedBox(width: 8),
-          
-          // Delete button
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            color: AppTheme.accentRed,
-            tooltip: 'Xóa ghi chú',
-            onPressed: () => _confirmDelete(notesViewModel),
+        
+        const SizedBox(width: 8),
+        
+        // Save button
+        ElevatedButton.icon(
+          onPressed: _hasChanges ? _saveNote : null,
+          icon: const Icon(Icons.save_outlined, size: 18),
+          label: const Text('Lưu'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _hasChanges ? AppTheme.primaryColor : Colors.grey.shade300,
+            foregroundColor: _hasChanges ? Colors.white : AppTheme.textSecondary,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           ),
-        ],
+        ),
+        
+        const SizedBox(width: 8),
+        
+        // Delete button
+        IconButton(
+          icon: const Icon(Icons.delete_outline),
+          color: AppTheme.accentRed,
+          tooltip: 'Xóa ghi chú',
+          onPressed: () => _confirmDelete(notesViewModel),
+        ),
+      ],
       ),
     );
   }

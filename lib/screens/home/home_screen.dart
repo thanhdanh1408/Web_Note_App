@@ -84,116 +84,116 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Row(
         children: [
-          // Logo
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              gradient: AppTheme.primaryGradient,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.note_alt_rounded,
-              color: Colors.white,
-              size: 24,
-            ),
+        // Logo
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            gradient: AppTheme.primaryGradient,
+            borderRadius: BorderRadius.circular(10),
           ),
-          const SizedBox(width: 12),
-          
-          // App name
-          Text(
-            'NotesApp',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
-            ),
+          child: const Icon(
+            Icons.note_alt_rounded,
+            color: Colors.white,
+            size: 24,
           ),
-          
-          const Spacer(),
-          
-          // User profile button
-          Tooltip(
-            message: 'Hồ sơ người dùng',
-            child: IconButton(
-              icon: CircleAvatar(
-                radius: 16,
-                backgroundColor: AppTheme.primaryColor,
-                child: Text(
-                  authViewModel.username.isNotEmpty 
-                      ? authViewModel.username[0].toUpperCase() 
-                      : '?',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
+        ),
+        const SizedBox(width: 12),
+        
+        // App name
+        Text(
+          'NotesApp',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        
+        const Spacer(),
+        
+        // User profile button
+        Tooltip(
+          message: 'Hồ sơ người dùng',
+          child: IconButton(
+            icon: CircleAvatar(
+              radius: 16,
+              backgroundColor: AppTheme.primaryColor,
+              child: Text(
+                authViewModel.username.isNotEmpty 
+                    ? authViewModel.username[0].toUpperCase() 
+                    : '?',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const ProfileScreen(),
-                  ),
-                );
-              },
             ),
-          ),
-          const SizedBox(width: 8),
-          
-          // User greeting
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppTheme.cardColor,
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: Row(
-              children: [
-                Text(
-                  'Xin chào, ${authViewModel.username}',
-                  style: TextStyle(
-                    color: AppTheme.textPrimary,
-                    fontWeight: FontWeight.w500,
-                  ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ProfileScreen(),
                 ),
-              ],
-            ),
+              );
+            },
           ),
-          const SizedBox(width: 12),
-          
-          // SAFE button
-          Tooltip(
-            message: 'Ghi chú riêng tư',
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const PrivateNotesScreen(),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.lock_rounded, size: 18),
-              label: const Text('SAFE'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentGreen,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        const SizedBox(width: 8),
+        
+        // User greeting
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppTheme.cardColor,
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Row(
+            children: [
+              Text(
+                'Xin chào, ${authViewModel.username}',
+                style: TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        
+        // SAFE button
+        Tooltip(
+          message: 'Ghi chú riêng tư',
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const PrivateNotesScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.lock_rounded, size: 18),
+            label: const Text('SAFE'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.accentGreen,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
           ),
-          const SizedBox(width: 8),
-          
-          // Logout button
-          Tooltip(
-            message: 'Đăng xuất',
-            child: IconButton(
-              icon: const Icon(Icons.logout_rounded),
-              color: AppTheme.accentRed,
-              onPressed: () => _confirmLogout(authViewModel),
-            ),
+        ),
+        const SizedBox(width: 8),
+        
+        // Logout button
+        Tooltip(
+          message: 'Đăng xuất',
+          child: IconButton(
+            icon: const Icon(Icons.logout_rounded),
+            color: AppTheme.accentRed,
+            onPressed: () => _confirmLogout(authViewModel),
           ),
-        ],
+        ),
+      ],
       ),
     );
   }

@@ -29,6 +29,11 @@ class AuthViewModelSupabase extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Public method to reload current user (useful after profile update)
+  void loadCurrentUser() {
+    _loadCurrentUser();
+  }
+
   /// Listen to auth state changes
   void _listenToAuthChanges() {
     _supabaseService.authStateChanges.listen((AuthState data) {

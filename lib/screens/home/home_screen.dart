@@ -7,6 +7,7 @@ import '../../widgets/note_card.dart';
 import '../../widgets/note_detail_view.dart';
 import '../../widgets/search_filter_bar.dart';
 import '../private/private_notes_screen.dart';
+import '../profile/profile_screen.dart';
 
 /// Main home screen with split layout
 class HomeScreen extends StatefulWidget {
@@ -109,6 +110,36 @@ class _HomeScreenState extends State<HomeScreen> {
           
           const Spacer(),
           
+          // User profile button
+          Tooltip(
+            message: 'Hồ sơ người dùng',
+            child: IconButton(
+              icon: CircleAvatar(
+                radius: 16,
+                backgroundColor: AppTheme.primaryColor,
+                child: Text(
+                  authViewModel.username.isNotEmpty 
+                      ? authViewModel.username[0].toUpperCase() 
+                      : '?',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ProfileScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(width: 8),
+          
           // User greeting
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -118,21 +149,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 14,
-                  backgroundColor: AppTheme.primaryColor,
-                  child: Text(
-                    authViewModel.username.isNotEmpty 
-                        ? authViewModel.username[0].toUpperCase() 
-                        : '?',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
                 Text(
                   'Xin chào, ${authViewModel.username}',
                   style: TextStyle(

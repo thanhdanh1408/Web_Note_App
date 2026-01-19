@@ -46,6 +46,34 @@ class SupabaseService {
   /// Get auth state changes stream
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
 
+  /// Update user password
+  Future<void> updatePassword(String newPassword) async {
+    await _client.auth.updateUser(
+      UserAttributes(password: newPassword),
+    );
+  }
+
+  /// Verify current password by attempting to sign in
+  Future<bool> verifyCurrentPassword(String email, String password) async {
+    try {
+      // Store the current session
+      final currentSession = _client.auth.currentSession;
+      
+      // Try to sign in with the provided credentials
+      final response = await _client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      
+      // If sign in successful, the password is correct
+      // Note: This will create a new session, but we're already logged in
+      return response.user != null;
+    } catch (e) {
+      // If sign in fails, password is incorrect
+      return false;
+    }
+  }
+
   // ==================== PROFILE OPERATIONS ====================
 
   /// Get user profile

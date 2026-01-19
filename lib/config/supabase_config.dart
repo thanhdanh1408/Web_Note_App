@@ -1,12 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Configuration class for Supabase initialization
 class SupabaseConfig {
   // Supabase credentials - Replace with your actual values from .env
   static const String supabaseUrl = 'https://ttewhmtraletjujjogsk.supabase.co';
   static const String supabaseAnonKey = 'sb_publishable_QqU8Gcd9p3aPCh-1GpK54w_d2KQUT8Z';
 
-  /// Initialize Supabase
   static Future<void> initialize() async {
     await Supabase.initialize(
       url: supabaseUrl,

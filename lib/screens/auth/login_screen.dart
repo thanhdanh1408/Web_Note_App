@@ -22,7 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    super.dispose();
+    super.dispose();  
   }
 
   Future<void> _login() async {
@@ -115,6 +115,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Email',
                           prefixIcon: Icon(Icons.email_outlined),
+                          hintText: 'example@gmail.com',
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -122,6 +123,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           }
                           if (!value.contains('@')) {
                             return 'Email không hợp lệ';
+                          }
+                          if (!value.trim().toLowerCase().endsWith('@gmail.com')) {
+                            return 'Chỉ chấp nhận email với đuôi @gmail.com';
                           }
                           return null;
                         },
@@ -147,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 _obscurePassword = !_obscurePassword;
                               });
                             },
-                          ),
+                          ),  
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -191,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(
+                                MaterialPageRoute(    //Animation
                                   builder: (_) => const RegisterScreen(),
                                 ),
                               );

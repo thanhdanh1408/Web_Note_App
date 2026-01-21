@@ -43,8 +43,6 @@ class AuthViewModelSupabase extends ChangeNotifier {
   }
 
   /// Register a new user
-  /// Returns true if registration successful (user created)
-  /// Note: After register, user needs to login separately
   Future<bool> register(String email, String password, String username) async {
     _isLoading = true;
     _error = null;

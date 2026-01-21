@@ -131,6 +131,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Email',
                           prefixIcon: Icon(Icons.email_outlined),
+                          hintText: 'example@gmail.com',
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -138,6 +139,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           }
                           if (!value.contains('@') || !value.contains('.')) {
                             return 'Email không hợp lệ';
+                          }
+                          if (!value.trim().toLowerCase().endsWith('@gmail.com')) {
+                            return 'Chỉ chấp nhận email với đuôi @gmail.com';
                           }
                           return null;
                         },

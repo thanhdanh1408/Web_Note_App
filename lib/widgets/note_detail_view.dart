@@ -393,8 +393,7 @@ class _NoteDetailViewState extends State<NoteDetailView> {
     final note = widget.note;
     final authViewModel = context.read<AuthViewModelSupabase>();
     
-    if (note.isPrivate) {
-      // Remove from SAFE - just toggle off
+      if (note.isPrivate) {       
       await notesViewModel.togglePrivate(note);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

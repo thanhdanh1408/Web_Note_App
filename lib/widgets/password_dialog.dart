@@ -5,7 +5,7 @@ import '../theme/app_theme.dart';
 class PasswordDialog extends StatefulWidget {
   final String title;
   final String? subtitle;
-  final bool isSetPassword; // true for setting, false for verifying
+  final bool isSetPassword;
 
   const PasswordDialog({
     super.key,
